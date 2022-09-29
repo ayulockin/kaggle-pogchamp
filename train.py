@@ -12,7 +12,8 @@ import tensorflow as tf
 
 from pogchamp.data import GetDataloader
 from pogchamp.model import get_model
-from pogchamp.callbacks import *
+from pogchamp import callbacks
+from pogchamp import utils
 
 # Config
 FLAGS = flags.FLAGS
@@ -21,83 +22,96 @@ flags.DEFINE_bool("wandb", False, "MLOps pipeline for our classifier.")
 flags.DEFINE_bool("log_model", False, "Checkpoint model while training.")
 flags.DEFINE_bool("log_eval", False, "Log model prediction, needs --wandb argument as well.")
 
+# Grow GPU memory as required.
+utils.grow_gpus()
 
-# def main(_):
-#     # Get configs from the config file.
-#     config = CONFIG.value
-#     print(config)
-
-#     CALLBACKS = []
-#     # Initialize a Weights and Biases run.
-#     if FLAGS.wandb:
-#         run = wandb.init(
-#             project=CONFIG.value.wandb_config.project,
-#             job_type='train',
-#             config=config.to_dict(),
-#         )
-#         wandb.run._label(code="ccd2022")
-#         # WandbCallback for experiment tracking
-#         CALLBACKS += [WandbCallback(save_model=False)]
-
-#     # Download and get dataset
-#     dataset_name = config.dataset_config.dataset_name
-#     info, (train_images, train_labels) = download_and_get_dataset(dataset_name, 'train')
-#     info, (valid_images, valid_labels) = download_and_get_dataset(dataset_name, 'valid')
-
-#     ## Update the `num_classes` and update wandb config
-#     config.dataset_config.num_classes = len(info["label"])
-#     if wandb.run is not None:
-#         wandb.config.update(
-#             {"dataset_config.num_classes": config.dataset_config.num_classes})
-
-#     # Get dataloader
-#     make_dataloader = GetDataloader(config)
-#     trainloader = make_dataloader.get_dataloader(train_images, train_labels)
-#     validloader = make_dataloader.get_dataloader(valid_images, valid_labels, dataloader_type="valid")
-
-#     # Get model
-#     tf.keras.backend.clear_session()
-#     model = get_model(config)
-#     model.summary()
-
-#     # Initialize callbacks
-#     callback_config = config.callback_config
-#     # Builtin early stopping callback
-#     if callback_config.use_earlystopping:
-#         earlystopper = get_earlystopper(config)
-#         CALLBACKS += [earlystopper]
-#     # Built in callback to reduce learning rate on plateau
-#     if callback_config.use_reduce_lr_on_plateau:
-#         reduce_lr_on_plateau = get_reduce_lr_on_plateau(config)
-#         CALLBACKS += [reduce_lr_on_plateau]
-
-#     # Initialize Custom W&B callbacks
-#     if FLAGS.log_model:
-#         # Custom W&B model checkpoint callback
-#         model_checkpointer = get_model_checkpoint_callback(config)
-#         CALLBACKS += [model_checkpointer]
-
-#     # Custom W&B model prediction visualization callback
-#     if wandb.run is not None:
-#         if FLAGS.log_eval:
-#             model_pred_viz = get_evaluation_callback(config, validloader)
-#             CALLBACKS += [model_pred_viz]
-
-#     # Compile the model
-#     model.compile(
-#         optimizer = config.train_config.optimizer,
-#         loss = config.train_config.loss,
-#         metrics = config.train_config.metrics
-#     )
-
-#     # Train the model
-#     model.fit(
-#         trainloader,
-#         validation_data = validloader,
-#         epochs = config.train_config.epochs,
-#         callbacks=CALLBACKS
-#     )
+# Data rquirements
+DATA_PATH = "../corn"
+label2id = {
+    "pure": 0,
+    "broken": 1,
+    "silkcut": 2,
+    "discolored": 3,
+}
 
 
-# if __name__ == "__main__":
-#     app.run(main)
+def main(_):
+    # Get configs from the config file.
+    config = CONFIG.value
+    # print(config)
+
+    CALLBACKS = []
+    # Initialize a Weights and Biases run.
+    if FLAGS.wandb:
+        run = wandb.init(
+            project=CONFIG.value.wandb_config.project,
+            job_type='train',
+            config=config.to_dict(),
+        )
+        # WandbCallback for experiment tracking
+        CALLBACKS += [callbacks.WandBMetricsLogger()]
+
+    # Load the dataframe and clean it.
+    train_df = pd.read_csv(f"{DATA_PATH}/train_split.csv")[["image", "label"]]
+    valid_df = pd.read_csv(f"{DATA_PATH}/valid_split.csv")[["image", "label"]]
+
+    def apply_path(row):
+        return f"{DATA_PATH}/{row.image}"
+    train_df["image"] = train_df.apply(lambda row: apply_path(row), axis=1)
+    valid_df["image"] = valid_df.apply(lambda row: apply_path(row), axis=1)
+
+    def map_label_id(row):
+        return label2id[row.label]
+    train_df["label"] = train_df.apply(lambda row: map_label_id(row), axis=1)
+    valid_df["label"] = valid_df.apply(lambda row: map_label_id(row), axis=1)
+
+    # Get dataloader
+    make_dataloader = GetDataloader(config)
+    trainloader = make_dataloader.get_dataloader(train_df.image.values, train_df.label.values)
+    validloader = make_dataloader.get_dataloader(valid_df.image.values, valid_df.label.values, dataloader_type="valid")
+
+    # Get model
+    tf.keras.backend.clear_session()
+    model = get_model(config)
+    model.summary()
+
+    # Initialize callbacks
+    callback_config = config.callback_config
+    # Builtin early stopping callback
+    if callback_config.use_earlystopping:
+        earlystopper = callbacks.get_earlystopper(config)
+        CALLBACKS += [earlystopper]
+    # Built in callback to reduce learning rate on plateau
+    if callback_config.use_reduce_lr_on_plateau:
+        reduce_lr_on_plateau = callbacks.get_reduce_lr_on_plateau(config)
+        CALLBACKS += [reduce_lr_on_plateau]
+
+    # Initialize Model checkpointing callback
+    if FLAGS.log_model:
+        # Custom W&B model checkpoint callback
+        model_checkpointer = callbacks.get_model_checkpoint_callback(config)
+        CALLBACKS += [model_checkpointer]
+
+    if wandb.run is not None:
+        if FLAGS.log_eval:
+            model_pred_viz = callbacks.get_evaluation_callback(config, validloader)
+            CALLBACKS += [model_pred_viz]
+
+    # Compile the model
+    model.compile(
+        optimizer = config.train_config.optimizer,
+        loss = config.train_config.loss,
+        metrics = config.train_config.metrics
+    )
+
+    # Train the model
+    model.fit(
+        trainloader,
+        validation_data = validloader,
+        epochs = config.train_config.epochs,
+        callbacks=CALLBACKS
+    )
+
+
+if __name__ == "__main__":
+    app.run(main)

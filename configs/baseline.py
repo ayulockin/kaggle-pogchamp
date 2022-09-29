@@ -15,22 +15,24 @@ def get_wandb_configs() -> ml_collections.ConfigDict:
 
 def get_dataset_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.dataset_name = "bloodmnist"
-    configs.image_height = 28
-    configs.image_width = 28
+    configs.image_height = 96
+    configs.image_width = 96
     configs.channels = 3
-    configs.apply_resize = True
-    configs.batch_size = 128
-    configs.num_classes = config_dict.placeholder(int)
-    configs.apply_one_hot = True
+    configs.shuffle_buffer = 1024
+    configs.batch_size = 64
+    configs.num_classes = 4
     configs.do_cache = False
+    configs.use_augmentations = False
+    # Always True since images are of varying sizes.
+    configs.apply_resize = True
+    configs.apply_one_hot = True
 
     return configs
 
 def get_model_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.model_img_height = 28
-    configs.model_img_width = 28
+    configs.model_img_height = 96
+    configs.model_img_width = 96
     configs.model_img_channels = 3
     configs.backbone = "resnet50"
     configs.use_pretrained_weights = True
@@ -58,7 +60,7 @@ def get_callback_configs() -> ml_collections.ConfigDict:
 
 def get_train_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.epochs = 3
+    configs.epochs = 10
     configs.use_augmentations = False
     configs.use_class_weights = False
     configs.optimizer = "adam"
