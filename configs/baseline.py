@@ -5,7 +5,7 @@ from ml_collections import config_dict
 
 def get_wandb_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.project = "medmnist2D"
+    configs.project = "pogchamp"
     configs.log_data_type = "train"
     configs.log_num_samples = -1 # passing -1 will upload the complete dataset
     configs.log_evaluation_table = False

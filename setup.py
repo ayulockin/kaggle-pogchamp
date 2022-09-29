@@ -10,15 +10,15 @@ def read(fname):
 
 
 setup(
-    name="minimal_mlops",
+    name="kaggle-pogchamp",
     version="0.0.1",
     author="Ayush Thakur",
     author_email="mein2work@gmail.com",
     description=(
-        "Image classification in TensorFlow/Keras baked with Weights and Biases."
+        "Classification pipeline for Kaggle Pogchamp Series competition built using TF/Keras and W&B."
     ),
     license="MIT License",
-    keywords="image_classification tensorflow keras wandb",
-    packages=["classifier", "configs"],
+    keywords="image_classification tensorflow keras wandb kaggle",
+    packages=["pogchamp"],
     long_description=read("README.md"),
 )
