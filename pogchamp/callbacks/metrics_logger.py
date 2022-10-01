@@ -1,5 +1,6 @@
 from typing import Optional
 
+import tensorflow as tf
 from tensorflow.keras import callbacks
 
 import wandb
@@ -54,6 +55,4 @@ class WandBMetricsLogger(callbacks.Callback):
         self.on_batch_end(batch, logs)
 
     def _get_lr(self, step):
-        return self.model.optimizer.learning_rate(
-            step=self.optimizer.iterations
-        ).numpy()
+        return tf.keras.backend.get_value(self.model.optimizer.lr)

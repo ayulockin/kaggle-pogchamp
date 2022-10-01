@@ -11,7 +11,7 @@ class GetDataloader:
     def __init__(self, args):
         self.args = args
 
-    def get_dataloader(self, paths, labels, dataloader_type="train"):
+    def get_dataloader(self, paths, labels=None, dataloader_type="train"):
         """
         Args:
             paths: List of strings, where each string is path to the image.
@@ -22,7 +22,10 @@ class GetDataloader:
             dataloader: train, validation or test dataloader
         """
         # Consume dataframe
-        dataloader = tf.data.Dataset.from_tensor_slices((paths, labels))
+        if dataloader_type != "test":
+            dataloader = tf.data.Dataset.from_tensor_slices((paths, labels))
+        else:
+            dataloader = tf.data.Dataset.from_tensor_slices((paths))
 
         # Shuffle if its for training
         if dataloader_type == "train":
@@ -37,10 +40,10 @@ class GetDataloader:
         if self.args.dataset_config.do_cache:
             dataloader = dataloader.cache()
 
-        # Add augmentation to dataloader for training
-        if self.args.dataset_config.use_augmentations and dataloader_type == "train":
-            self.transform = self.build_augmentation()
-            dataloader = dataloader.map(self.augmentation, num_parallel_calls=AUTOTUNE)
+        # # Add augmentation to dataloader for training
+        # if self.args.dataset_config.use_augmentations and dataloader_type == "train":
+        #     self.transform = self.build_augmentation()
+        #     dataloader = dataloader.map(self.augmentation, num_parallel_calls=AUTOTUNE)
 
         # Add general stuff
         dataloader = dataloader.batch(self.args.dataset_config.batch_size).prefetch(
@@ -61,7 +64,7 @@ class GetDataloader:
                     self.args.dataset_config.image_height,
                     self.args.dataset_config.image_width,
                 ]
-            elif dataloader_type == "valid":
+            elif dataloader_type == "valid" or dataloader_type=="test":
                 resize_hw = [
                     self.args.model_config.model_img_height,
                     self.args.model_config.model_img_width,
@@ -77,13 +80,16 @@ class GetDataloader:
 
         return img
 
-    def parse_data(self, path, label, dataloader_type="train"):
+    def parse_data(self, path, label=None, dataloader_type="train"):
         # Parse Image
         image = tf.io.read_file(path)
         image = self.decode_image(image, dataloader_type)
 
         # Parse Target
-        label = tf.cast(label, dtype=tf.int64)
-        if self.args.dataset_config.apply_one_hot:
-            label = tf.one_hot(label, depth=self.args.dataset_config.num_classes)
-        return image, label
+        if dataloader_type == "test":
+            return image
+        else:
+            label = tf.cast(label, dtype=tf.int64)
+            if self.args.dataset_config.apply_one_hot:
+                label = tf.one_hot(label, depth=self.args.dataset_config.num_classes)
+            return image, label
