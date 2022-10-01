@@ -35,6 +35,7 @@ class WandBMetricsLogger(callbacks.Callback):
     def on_epoch_end(self, epoch: int, logs: dict = {}):
         """Called at the end of an epoch."""
         wandb.log({"epoch": epoch}, commit=False)
+        logs["learning_rate"] = self._get_lr(step=epoch)
         wandb.log(logs, commit=True)
 
     def on_batch_end(self, batch: int, logs: dict = {}):
@@ -43,6 +44,7 @@ class WandBMetricsLogger(callbacks.Callback):
             wandb.log({"batch/batch_step": self.global_batch}, commit=False)
 
             logs = {f"batch/{k}": v for k, v in logs.items()}
+            logs["batch/learning_rate"] = self._get_lr(step=batch)
             wandb.log(logs, commit=True)
 
             self.global_batch += self.log_batch_frequency
@@ -50,3 +52,8 @@ class WandBMetricsLogger(callbacks.Callback):
     def on_train_batch_end(self, batch: int, logs: dict = {}):
         """Called at the end of a training batch in `fit` methods."""
         self.on_batch_end(batch, logs)
+
+    def _get_lr(self, step):
+        return self.model.optimizer.learning_rate(
+            step=self.optimizer.iterations
+        ).numpy()

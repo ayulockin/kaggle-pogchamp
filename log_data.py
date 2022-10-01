@@ -1,11 +1,12 @@
 import os
-import wandb
-import numpy as np
-from absl import flags, app
-from ml_collections.config_flags import config_flags
 
+import numpy as np
+from absl import app, flags
 from classifier.data import download_and_get_dataset
 from classifier.utils import log_data_as_table
+from ml_collections.config_flags import config_flags
+
+import wandb
 
 # Config
 FLAGS = flags.FLAGS
@@ -21,7 +22,7 @@ def main(_):
     if FLAGS.wandb:
         run = wandb.init(
             project=CONFIG.value.wandb_config.project,
-            job_type='train',
+            job_type="train",
             config=config.to_dict(),
         )
 
@@ -37,8 +38,9 @@ def main(_):
         images,
         labels,
         data_type=data_type,
-        num_samples=config.wandb_config.log_num_samples
+        num_samples=config.wandb_config.log_num_samples,
     )
+
 
 if __name__ == "__main__":
     app.run(main)

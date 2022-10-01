@@ -1,4 +1,5 @@
 import os
+
 import ml_collections
 from ml_collections import config_dict
 
@@ -7,11 +8,12 @@ def get_wandb_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
     configs.project = "pogchamp"
     configs.log_data_type = "train"
-    configs.log_num_samples = -1 # passing -1 will upload the complete dataset
+    configs.log_num_samples = -1  # passing -1 will upload the complete dataset
     configs.log_evaluation_table = False
     # configs.entity = "wandb_fc"
 
     return configs
+
 
 def get_dataset_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
@@ -29,6 +31,7 @@ def get_dataset_configs() -> ml_collections.ConfigDict:
 
     return configs
 
+
 def get_model_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
     configs.model_img_height = 96
@@ -41,13 +44,14 @@ def get_model_configs() -> ml_collections.ConfigDict:
 
     return configs
 
+
 def get_callback_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
     # Early stopping
     configs.use_earlystopping = True
     configs.early_patience = 6
     # Reduce LR on plateau
-    configs.use_reduce_lr_on_plateau = False
+    configs.use_reduce_lr_on_plateau = True
     configs.rlrp_factor = 0.2
     configs.rlrp_patience = 3
     # Model checkpointing
@@ -57,6 +61,7 @@ def get_callback_configs() -> ml_collections.ConfigDict:
     configs.viz_num_images = 100
 
     return configs
+
 
 def get_train_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
@@ -69,6 +74,7 @@ def get_train_configs() -> ml_collections.ConfigDict:
     configs.metrics = ["accuracy"]
 
     return configs
+
 
 def get_config() -> ml_collections.ConfigDict:
     config = ml_collections.ConfigDict()

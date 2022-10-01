@@ -12,7 +12,9 @@ class WandbClfCallback(BaseWandbEvalCallback):
 
         self.args = args
         # Make unbatched iterator from `tf.data.Dataset`.
-        self.val_ds = dataloader.unbatch().take(self.args.callback_config.viz_num_images)
+        self.val_ds = dataloader.unbatch().take(
+            self.args.callback_config.viz_num_images
+        )
 
     def add_ground_truth(self, logs):
         for idx, (image, label) in enumerate(self.val_ds.as_numpy_iterator()):

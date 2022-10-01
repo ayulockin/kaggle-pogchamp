@@ -1,18 +1,18 @@
-import os
 import json
-import wandb
+import os
 import tempfile
-import numpy as np
-import ml_collections
 
+import ml_collections
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras import models
+from tensorflow.keras import layers, models
+
+import wandb
 
 
 def get_backbone(args):
     """Get backbone for the model.
-    
+
     Args:
         args (ml_collections.ConfigDict): Configuration.
     """
@@ -20,10 +20,10 @@ def get_backbone(args):
     if args.model_config.use_pretrained_weights:
         weights = "imagenet"
 
-    if args.model_config.backbone == 'vgg16':
+    if args.model_config.backbone == "vgg16":
         base_model = tf.keras.applications.VGG16(include_top=False, weights=weights)
         base_model.trainable = True
-    elif args.model_config.backbone == 'resnet50':
+    elif args.model_config.backbone == "resnet50":
         base_model = tf.keras.applications.ResNet50(include_top=False, weights=weights)
         base_model.trainable = True
     else:
@@ -31,9 +31,10 @@ def get_backbone(args):
 
     return base_model
 
+
 def get_model(args):
     """Get an image classifier with a CNN based backbone.
-    
+
     Args:
         args (ml_collections.ConfigDict): Configuration.
     """
@@ -41,16 +42,18 @@ def get_model(args):
     base_model = get_backbone(args)
 
     # Stack layers
-    inputs = layers.Input(shape=(
-        args.model_config.model_img_height,
-        args.model_config.model_img_width,
-        args.model_config.model_img_channels
-    ))
+    inputs = layers.Input(
+        shape=(
+            args.model_config.model_img_height,
+            args.model_config.model_img_width,
+            args.model_config.model_img_channels,
+        )
+    )
 
     x = base_model(inputs, training=True)
     x = layers.GlobalAveragePooling2D()(x)
     if args.model_config.post_gap_dropout:
         x = layers.Dropout(args.model_config.dropout_rate)(x)
-    outputs = layers.Dense(args.dataset_config.num_classes, activation='softmax')(x)
+    outputs = layers.Dense(args.dataset_config.num_classes, activation="softmax")(x)
 
     return models.Model(inputs, outputs)

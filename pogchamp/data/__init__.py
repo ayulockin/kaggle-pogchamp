@@ -1,6 +1,3 @@
 from .dataloader import GetDataloader
 
-
-__all__ = [
-    "GetDataloader"
-]
+__all__ = ["GetDataloader"]

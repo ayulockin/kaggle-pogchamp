@@ -1,26 +1,26 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import numpy as np
 import pandas as pd
-from absl import app
-from absl import flags
+import tensorflow as tf
+from absl import app, flags
 from ml_collections.config_flags import config_flags
+from wandb.keras import WandbCallback
 
 import wandb
-from wandb.keras import WandbCallback
-import tensorflow as tf
-
+from pogchamp import callbacks, utils
 from pogchamp.data import GetDataloader
 from pogchamp.model import get_model
-from pogchamp import callbacks
-from pogchamp import utils
 
 # Config
 FLAGS = flags.FLAGS
 CONFIG = config_flags.DEFINE_config_file("config")
 flags.DEFINE_bool("wandb", False, "MLOps pipeline for our classifier.")
 flags.DEFINE_bool("log_model", False, "Checkpoint model while training.")
-flags.DEFINE_bool("log_eval", False, "Log model prediction, needs --wandb argument as well.")
+flags.DEFINE_bool(
+    "log_eval", False, "Log model prediction, needs --wandb argument as well."
+)
 
 # Grow GPU memory as required.
 utils.grow_gpus()
@@ -45,7 +45,7 @@ def main(_):
     if FLAGS.wandb:
         run = wandb.init(
             project=CONFIG.value.wandb_config.project,
-            job_type='train',
+            job_type="train",
             config=config.to_dict(),
         )
         # WandbCallback for experiment tracking
@@ -57,18 +57,24 @@ def main(_):
 
     def apply_path(row):
         return f"{DATA_PATH}/{row.image}"
+
     train_df["image"] = train_df.apply(lambda row: apply_path(row), axis=1)
     valid_df["image"] = valid_df.apply(lambda row: apply_path(row), axis=1)
 
     def map_label_id(row):
         return label2id[row.label]
+
     train_df["label"] = train_df.apply(lambda row: map_label_id(row), axis=1)
     valid_df["label"] = valid_df.apply(lambda row: map_label_id(row), axis=1)
 
     # Get dataloader
     make_dataloader = GetDataloader(config)
-    trainloader = make_dataloader.get_dataloader(train_df.image.values, train_df.label.values)
-    validloader = make_dataloader.get_dataloader(valid_df.image.values, valid_df.label.values, dataloader_type="valid")
+    trainloader = make_dataloader.get_dataloader(
+        train_df.image.values, train_df.label.values
+    )
+    validloader = make_dataloader.get_dataloader(
+        valid_df.image.values, valid_df.label.values, dataloader_type="valid"
+    )
 
     # Get model
     tf.keras.backend.clear_session()
@@ -99,17 +105,17 @@ def main(_):
 
     # Compile the model
     model.compile(
-        optimizer = config.train_config.optimizer,
-        loss = config.train_config.loss,
-        metrics = config.train_config.metrics
+        optimizer=config.train_config.optimizer,
+        loss=config.train_config.loss,
+        metrics=config.train_config.metrics,
     )
 
     # Train the model
     model.fit(
         trainloader,
-        validation_data = validloader,
-        epochs = config.train_config.epochs,
-        callbacks=CALLBACKS
+        validation_data=validloader,
+        epochs=config.train_config.epochs,
+        callbacks=CALLBACKS,
     )
 
 
