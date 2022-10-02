@@ -22,3 +22,13 @@ def get_randaugmment(args):
 
 def get_mixup(args):
     return keras_cv.layers.MixUp(alpha=args.alpha)
+
+
+def get_augmix(args):
+    return keras_cv.layers.AugMix(
+        value_range=args.value_range,
+        severity=args.severity,
+        num_chains=args.num_chains,
+        chain_depth=args.chain_depth,
+        alpha=args.alpha,
+    )

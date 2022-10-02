@@ -36,10 +36,11 @@ def get_dataset_configs() -> ml_collections.ConfigDict:
 
 
 def get_augmentation_configs() -> ml_collections.ConfigDict:
-    configs = ml_collections.ConfigDict
+    configs = ml_collections.ConfigDict()
     configs.randaugment = randaugment_config()
     configs.mixup = mixup_config()
-    configs.use_augmentations = ["mixup"]
+    configs.augmix = augmix_config()
+    configs.use_augmentations = ("augmix",)
 
     return configs
 

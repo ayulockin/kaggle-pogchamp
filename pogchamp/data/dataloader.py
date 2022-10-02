@@ -109,6 +109,9 @@ class GetDataloader:
         if "mixup" in use_augmentations:
             mixup = get_mixup(aug_config.mixup)
             augmentations.append(mixup)
+        if "augmix" in use_augmentations:
+            augmix = get_augmix(aug_config.augmix)
+            augmentations.append(augmix)
 
         aug = keras_cv.layers.Augmenter(layers=augmentations)
         return aug
