@@ -57,7 +57,7 @@ def main(_):
 
     # Load the dataframe and clean it.
     df = pd.read_csv(f"{DATA_PATH}/test.csv")[["image"]]
-    df = preprocess_dataframe(df)
+    df = preprocess_dataframe(df, is_test=True)
     img_paths = df.image.values
 
     # Prepare dataloader.

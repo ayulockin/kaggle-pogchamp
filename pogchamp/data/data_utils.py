@@ -18,9 +18,9 @@ def map_label_id(row):
     return label2id[row.label]
 
 
-def preprocess_dataframe(df, data_type="test"):
+def preprocess_dataframe(df, is_test=False):
     df["image"] = df.apply(lambda row: apply_path(row), axis=1)
-    if data_type != "test":
+    if not is_test:
         df["label"] = df.apply(lambda row: map_label_id(row), axis=1)
 
     return df

@@ -6,12 +6,12 @@ import pandas as pd
 import tensorflow as tf
 from absl import app, flags
 from ml_collections.config_flags import config_flags
-from wandb.keras import WandbCallback
 
 import wandb
 from pogchamp import callbacks, utils
-from pogchamp.data import GetDataloader
+from pogchamp.data import GetDataloader, preprocess_dataframe
 from pogchamp.model import get_model
+from pogchamp.schedulers import get_warmup_cosine_decay
 
 # Config
 FLAGS = flags.FLAGS
@@ -38,7 +38,7 @@ label2id = {
 def main(_):
     # Get configs from the config file.
     config = CONFIG.value
-    # print(config)
+    print(config)
 
     CALLBACKS = []
     # Initialize a Weights and Biases run.
@@ -49,23 +49,14 @@ def main(_):
             config=config.to_dict(),
         )
         # WandbCallback for experiment tracking
-        CALLBACKS += [callbacks.WandBMetricsLogger()]
+        CALLBACKS += [callbacks.WandBMetricsLogger(log_batch_frequency=1)]
 
     # Load the dataframe and clean it.
     train_df = pd.read_csv(f"{DATA_PATH}/train_split.csv")[["image", "label"]]
+    train_df = preprocess_dataframe(train_df)
+
     valid_df = pd.read_csv(f"{DATA_PATH}/valid_split.csv")[["image", "label"]]
-
-    def apply_path(row):
-        return f"{DATA_PATH}/{row.image}"
-
-    train_df["image"] = train_df.apply(lambda row: apply_path(row), axis=1)
-    valid_df["image"] = valid_df.apply(lambda row: apply_path(row), axis=1)
-
-    def map_label_id(row):
-        return label2id[row.label]
-
-    train_df["label"] = train_df.apply(lambda row: map_label_id(row), axis=1)
-    valid_df["label"] = valid_df.apply(lambda row: map_label_id(row), axis=1)
+    valid_df = preprocess_dataframe(valid_df)
 
     # Get dataloader
     make_dataloader = GetDataloader(config)
@@ -102,6 +93,14 @@ def main(_):
         if FLAGS.log_eval:
             model_pred_viz = callbacks.get_evaluation_callback(config, validloader)
             CALLBACKS += [model_pred_viz]
+
+    # Learning rate Scheduler
+    # lr_config = config.lr_config
+    # total_steps = int(trainloader.cardinality().numpy())
+    # warmup_steps = int(0.05*total_steps)
+    # lr_config.warmup_cosine_decay.total_steps = total_steps
+    # lr_config.warmup_cosine_decay.warmup_steps = warmup_steps
+    # CALLBACKS += [callbacks.get_warmup_cosine_decay_callback(config)]
 
     # Compile the model
     model.compile(

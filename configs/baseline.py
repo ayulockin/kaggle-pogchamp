@@ -4,6 +4,7 @@ import ml_collections
 from ml_collections import config_dict
 
 from configs.augmentation_configs import *
+from configs.lr_schedule_configs import *
 
 
 def get_wandb_configs() -> ml_collections.ConfigDict:
@@ -73,6 +74,14 @@ def get_callback_configs() -> ml_collections.ConfigDict:
     return configs
 
 
+def get_lr_configs() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict()
+    # Warmup Cosine Decay
+    configs.warmup_cosine_decay = warmup_cosine_decay_config()
+
+    return configs
+
+
 def get_train_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
     configs.epochs = 15
@@ -94,6 +103,7 @@ def get_config() -> ml_collections.ConfigDict:
     config.aug_config = get_augmentation_configs()
     config.model_config = get_model_configs()
     config.callback_config = get_callback_configs()
+    config.lr_config = get_lr_configs()
     config.train_config = get_train_configs()
 
     return config
