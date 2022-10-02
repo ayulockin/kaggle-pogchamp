@@ -102,7 +102,17 @@ class GetDataloader:
         aug_config = self.args.aug_config
         use_augmentations = aug_config.use_augmentations
         augmentations = []
+        
 
+        if "random_flip" in use_augmentations:
+            random_flip = get_random_flip(aug_config.random_flip)
+            augmentations.append(random_flip)
+        if "random_ratation" in use_augmentations:
+            random_rotation = get_random_rotation(aug_config.random_ratation)
+            augmentations.append(random_ratation)
+        if "random_zoom" in use_augmentations:
+            random_zoom = get_random_zoom(aug_config.random_zoom)
+            augmentations.append(random_zoom)
         if "randaugment" in use_augmentations:
             randaugment = get_randaugmment(aug_config.randaugment)
             augmentations.append(randaugment)
@@ -112,6 +122,8 @@ class GetDataloader:
         if "augmix" in use_augmentations:
             augmix = get_augmix(aug_config.augmix)
             augmentations.append(augmix)
+
+        print("Augmentations uses: ", augmentations)
 
         aug = keras_cv.layers.Augmenter(layers=augmentations)
         return aug

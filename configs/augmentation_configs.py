@@ -21,12 +21,39 @@ def mixup_config() -> ml_collections.ConfigDict:
 
     return configs
 
+
 def augmix_config() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
     configs.value_range = (0., 255.)
     configs.severity=0.3
     configs.num_chains=3
     configs.chain_depth=[1, 3]
-    configs.alpha=1.0   
+    configs.alpha=0.6 
+
+    return configs
+
+
+def random_zoom_config() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict()
+    configs.height_factor = 0.1
+    configs.width_factor = None
+    configs.fill_mode = 'reflect'
+    configs.interpolation = 'bilinear'
+
+    return configs
+
+
+def random_rotation_config() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict()
+    configs.factor = 0.1
+    configs.fill_mode='reflect'
+    configs.interpolation='bilinear'
+
+    return configs
+
+
+def random_flip() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict()
+    configs.mode = "horizontal_and_vertical"
 
     return configs

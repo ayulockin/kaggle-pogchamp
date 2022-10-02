@@ -32,3 +32,24 @@ def get_augmix(args):
         chain_depth=args.chain_depth,
         alpha=args.alpha,
     )
+
+
+def get_random_flip(args):
+    return tf.keras.layers.RandomFlip(mode=args.mode)
+
+
+def get_random_rotation(args):
+    return tf.keras.layers.RandomRotation(
+        factor=args.factor,
+        fill_mode=args.fill_mode,
+        interpolation=args.interpolation,
+    )
+
+
+def get_random_zoom(args):
+    return tf.keras.layers.RandomZoom(
+        height_factor=args.height_factor,
+        width_factor=args.width_factor,
+        fill_mode=args.fill_mode,
+        interpolation=args.interpolation,
+    )

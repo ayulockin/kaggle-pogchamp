@@ -22,6 +22,11 @@ def get_convnext_model(model_name, weights):
             include_top=False,
             weights=weights
         )
+    if variant == "t":
+        backbone = tf.keras.applications.convnext.ConvNeXtTiny(
+            include_top=False,
+            weights=weights
+        )
     
     return backbone
 
@@ -30,13 +35,18 @@ def get_effnetv2_backbone(model_name, weights):
     variant = model_name.split("-")[-1]
     if variant == "b2":
         backbone = tf.keras.applications.efficientnet_v2.EfficientNetV2B2(
-            include_top=True,
-            weights='imagenet'
+            include_top=False,
+            weights=weights
         )
     if variant == "b0":
         backbone = tf.keras.applications.efficientnet_v2.EfficientNetV2B0(
             include_top=False,
-            weights='imagenet'
+            weights=weights
+        )
+    if variant == "s":
+        backbone = tf.keras.applications.efficientnet_v2.EfficientNetV2S(
+            include_top=False,
+            weights=weights
         )
 
     return backbone

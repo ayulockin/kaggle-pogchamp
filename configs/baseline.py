@@ -20,8 +20,8 @@ def get_wandb_configs() -> ml_collections.ConfigDict:
 
 def get_dataset_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.image_height = 128
-    configs.image_width = 128
+    configs.image_height = 224
+    configs.image_width = 224
     configs.channels = 3
     configs.shuffle_buffer = 1024
     configs.batch_size = 64
@@ -40,7 +40,11 @@ def get_augmentation_configs() -> ml_collections.ConfigDict:
     configs.randaugment = randaugment_config()
     configs.mixup = mixup_config()
     configs.augmix = augmix_config()
-    configs.use_augmentations = ("augmix",)
+    configs.random_zoom = random_zoom_config()
+    configs.random_rotation = random_rotation_config()
+    configs.random_flip = random_flip()
+
+    configs.use_augmentations = ("random_flip", "random_rotatation", "random_zoom", "mixup", "augmix")
 
     return configs
 
@@ -50,10 +54,10 @@ def get_model_configs() -> ml_collections.ConfigDict:
     configs.model_img_height = 128
     configs.model_img_width = 128
     configs.model_img_channels = 3
-    configs.backbone = "effnetv2-b0"
+    configs.backbone = "effnetv2-s"
     configs.use_pretrained_weights = True
     configs.dropout_rate = 0.5
-    configs.post_gap_dropout = False
+    configs.post_gap_dropout = True
 
     return configs
 
@@ -66,7 +70,7 @@ def get_callback_configs() -> ml_collections.ConfigDict:
     # Reduce LR on plateau
     configs.use_reduce_lr_on_plateau = True
     configs.rlrp_factor = 0.2
-    configs.rlrp_patience = 3
+    configs.rlrp_patience = 2
     # Model checkpointing
     configs.checkpoint_filepath = "wandb/model_{epoch}"
     configs.save_best_only = True
@@ -86,7 +90,7 @@ def get_lr_configs() -> ml_collections.ConfigDict:
 
 def get_train_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.epochs = 15
+    configs.epochs = 20
     configs.use_augmentations = False
     configs.use_class_weights = False
     configs.optimizer = "adam"
