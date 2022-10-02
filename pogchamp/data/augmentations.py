@@ -13,8 +13,8 @@ def get_randaugmment(args):
     """
     return keras_cv.layers.RandAugment(
         value_range=args.value_range,
-        # augmentations_per_image=args.augmentations_per_image,
-        # magnitude=args.magnitude,
-        # magnitude_stddev=args.magnitude_stddev,
-        # rate=args.rate,
+        augmentations_per_image=args.augmentations_per_image,
+        magnitude=args.magnitude,
+        magnitude_stddev=args.magnitude_stddev,
+        rate=args.rate,
     )
