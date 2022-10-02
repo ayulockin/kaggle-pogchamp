@@ -18,3 +18,7 @@ def get_randaugmment(args):
         magnitude_stddev=args.magnitude_stddev,
         rate=args.rate,
     )
+
+
+def get_mixup(args):
+    return keras_cv.layers.MixUp(alpha=args.alpha)

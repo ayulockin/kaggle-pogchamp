@@ -20,8 +20,8 @@ def get_wandb_configs() -> ml_collections.ConfigDict:
 
 def get_dataset_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.image_height = 96
-    configs.image_width = 96
+    configs.image_height = 128
+    configs.image_width = 128
     configs.channels = 3
     configs.shuffle_buffer = 1024
     configs.batch_size = 64
@@ -38,17 +38,18 @@ def get_dataset_configs() -> ml_collections.ConfigDict:
 def get_augmentation_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict
     configs.randaugment = randaugment_config()
-    configs.use_augmentations = ["randaugment"]
+    configs.mixup = mixup_config()
+    configs.use_augmentations = ["mixup"]
 
     return configs
 
 
 def get_model_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.model_img_height = 96
-    configs.model_img_width = 96
+    configs.model_img_height = 128
+    configs.model_img_width = 128
     configs.model_img_channels = 3
-    configs.backbone = "resnet50"
+    configs.backbone = "effnetv2-b0"
     configs.use_pretrained_weights = True
     configs.dropout_rate = 0.5
     configs.post_gap_dropout = False

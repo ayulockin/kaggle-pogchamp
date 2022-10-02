@@ -10,6 +10,38 @@ from tensorflow.keras import layers, models
 import wandb
 
 
+def get_convnext_model(model_name, weights):
+    variant = model_name.split("-")[-1]
+    if variant == "b":
+        backbone = tf.keras.applications.convnext.ConvNeXtBase(
+            include_top=False,
+            weights=weights
+        )
+    if variant == "s":
+        backbone = tf.keras.applications.convnext.ConvNeXtSmall(
+            include_top=False,
+            weights=weights
+        )
+    
+    return backbone
+
+
+def get_effnetv2_backbone(model_name, weights):
+    variant = model_name.split("-")[-1]
+    if variant == "b2":
+        backbone = tf.keras.applications.efficientnet_v2.EfficientNetV2B2(
+            include_top=True,
+            weights='imagenet'
+        )
+    if variant == "b0":
+        backbone = tf.keras.applications.efficientnet_v2.EfficientNetV2B0(
+            include_top=False,
+            weights='imagenet'
+        )
+
+    return backbone
+
+
 def get_backbone(args):
     """Get backbone for the model.
 
@@ -25,6 +57,12 @@ def get_backbone(args):
         base_model.trainable = True
     elif args.model_config.backbone == "resnet50":
         base_model = tf.keras.applications.ResNet50(include_top=False, weights=weights)
+        base_model.trainable = True
+    elif "convnext" in args.model_config.backbone:
+        base_model = get_convnext_model(args.model_config.backbone, weights)
+        base_model.trainable = True
+    elif "effnetv2" in args.model_config.backbone:
+        base_model = get_effnetv2_backbone(args.model_config.backbone, weights)
         base_model.trainable = True
     else:
         raise NotImplementedError("Not implemented for this backbone.")

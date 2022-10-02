@@ -13,3 +13,10 @@ def randaugment_config() -> ml_collections.ConfigDict:
     configs.geometric = True
 
     return configs
+
+
+def mixup_config() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict()
+    configs.alpha = 0.2
+
+    return configs

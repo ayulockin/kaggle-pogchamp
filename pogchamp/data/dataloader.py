@@ -39,25 +39,19 @@ class GetDataloader:
             num_parallel_calls=AUTOTUNE,
         )
 
-        # Add augmentation to dataloader for training
-        if self.args.dataset_config.use_augmentations and dataloader_type == "train":
-            data_augmentation = self.get_augmentations()
-            dataloader = dataloader.map(
-                lambda x, y: (data_augmentation(x), y), num_parallel_calls=AUTOTUNE
-            )
-
         if self.args.dataset_config.do_cache:
             dataloader = dataloader.cache()
 
-        # # Add augmentation to dataloader for training
-        # if self.args.dataset_config.use_augmentations and dataloader_type == "train":
-        #     self.transform = self.build_augmentation()
-        #     dataloader = dataloader.map(self.augmentation, num_parallel_calls=AUTOTUNE)
-
         # Add general stuff
-        dataloader = dataloader.batch(self.args.dataset_config.batch_size).prefetch(
-            AUTOTUNE
-        )
+        dataloader = dataloader.batch(self.args.dataset_config.batch_size)
+
+        # Add augmentation to dataloader for training
+        if self.args.dataset_config.use_augmentations and dataloader_type == "train":
+            dataloader = dataloader.map(
+                self.augment_data, num_parallel_calls=AUTOTUNE
+            )
+
+        dataloader = dataloader.prefetch(AUTOTUNE)
 
         return dataloader
 
@@ -65,7 +59,8 @@ class GetDataloader:
         # convert the compressed string to a 3D uint8 tensor
         img = tf.image.decode_png(img, channels=3)
         # Normalize image
-        img = tf.image.convert_image_dtype(img, dtype=tf.float32)
+        # img = tf.image.convert_image_dtype(img, dtype=tf.float32)
+        img = tf.cast(img, dtype=tf.float32)
         # resize the image to the desired size
         if self.args.dataset_config.apply_resize:
             if dataloader_type == "train":
@@ -85,7 +80,7 @@ class GetDataloader:
                 method="bicubic",
                 preserve_aspect_ratio=False,
             )
-            img = tf.clip_by_value(img, 0.0, 1.0)
+            img = tf.clip_by_value(img, 0.0, 255.0)
 
         return img
 
@@ -111,6 +106,20 @@ class GetDataloader:
         if "randaugment" in use_augmentations:
             randaugment = get_randaugmment(aug_config.randaugment)
             augmentations.append(randaugment)
+        if "mixup" in use_augmentations:
+            mixup = get_mixup(aug_config.mixup)
+            augmentations.append(mixup)
 
-        aug = tf.keras.models.Sequential(augmentations)
+        aug = keras_cv.layers.Augmenter(layers=augmentations)
         return aug
+
+    def augment_data(self, images, labels):
+        """
+        Map this method after batching.
+        """
+        if not self.args.dataset_config.apply_one_hot:
+            labels = tf.one_hot(labels, depth=self.args.dataset_config.num_classes)
+        inputs = {"images": images, "labels": labels}
+        augmenter = self.get_augmentations()
+        outputs = augmenter(inputs)
+        return outputs["images"], outputs["labels"]

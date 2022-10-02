@@ -11,7 +11,6 @@ import wandb
 from pogchamp import callbacks, utils
 from pogchamp.data import GetDataloader, preprocess_dataframe
 from pogchamp.model import get_model
-from pogchamp.schedulers import get_warmup_cosine_decay
 
 # Config
 FLAGS = flags.FLAGS
