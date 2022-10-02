@@ -4,6 +4,8 @@ import albumentations as A
 import numpy as np
 import tensorflow as tf
 
+from pogchamp.data.augmentations import *
+
 AUTOTUNE = tf.data.AUTOTUNE
 
 
@@ -37,6 +39,13 @@ class GetDataloader:
             num_parallel_calls=AUTOTUNE,
         )
 
+        # Add augmentation to dataloader for training
+        if self.args.dataset_config.use_augmentations and dataloader_type == "train":
+            data_augmentation = self.get_augmentations()
+            dataloader = dataloader.map(
+                lambda x, y: (data_augmentation(x), y), num_parallel_calls=AUTOTUNE
+            )
+
         if self.args.dataset_config.do_cache:
             dataloader = dataloader.cache()
 
@@ -64,7 +73,7 @@ class GetDataloader:
                     self.args.dataset_config.image_height,
                     self.args.dataset_config.image_width,
                 ]
-            elif dataloader_type == "valid" or dataloader_type=="test":
+            elif dataloader_type == "valid" or dataloader_type == "test":
                 resize_hw = [
                     self.args.model_config.model_img_height,
                     self.args.model_config.model_img_width,
@@ -93,3 +102,15 @@ class GetDataloader:
             if self.args.dataset_config.apply_one_hot:
                 label = tf.one_hot(label, depth=self.args.dataset_config.num_classes)
             return image, label
+
+    def get_augmentations(self):
+        aug_config = self.args.aug_config
+        use_augmentations = aug_config.use_augmentations
+        augmentations = []
+
+        if "randaugment" in use_augmentations:
+            randaugment = get_randaugmment(aug_config.randaugment)
+            augmentations.append(randaugment)
+
+        aug = tf.keras.models.Sequential(augmentations)
+        return aug

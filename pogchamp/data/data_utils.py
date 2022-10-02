@@ -13,8 +13,10 @@ id2label = {v: k for k, v in label2id.items()}
 def apply_path(row):
     return f"{DATA_PATH}/{row.image}"
 
+
 def map_label_id(row):
     return label2id[row.label]
+
 
 def preprocess_dataframe(df, data_type="test"):
     df["image"] = df.apply(lambda row: apply_path(row), axis=1)

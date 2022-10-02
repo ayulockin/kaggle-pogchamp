@@ -3,6 +3,8 @@ import os
 import ml_collections
 from ml_collections import config_dict
 
+from configs.augmentation_configs import *
+
 
 def get_wandb_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
@@ -24,10 +26,18 @@ def get_dataset_configs() -> ml_collections.ConfigDict:
     configs.batch_size = 64
     configs.num_classes = 4
     configs.do_cache = False
-    configs.use_augmentations = False
+    configs.use_augmentations = True
     # Always True since images are of varying sizes.
     configs.apply_resize = True
     configs.apply_one_hot = True
+
+    return configs
+
+
+def get_augmentation_configs() -> ml_collections.ConfigDict:
+    configs = ml_collections.ConfigDict
+    configs.randaugment = randaugment_config()
+    configs.use_augmentations = ["randaugment"]
 
     return configs
 
@@ -65,7 +75,7 @@ def get_callback_configs() -> ml_collections.ConfigDict:
 
 def get_train_configs() -> ml_collections.ConfigDict:
     configs = ml_collections.ConfigDict()
-    configs.epochs = 10
+    configs.epochs = 15
     configs.use_augmentations = False
     configs.use_class_weights = False
     configs.optimizer = "adam"
@@ -81,6 +91,7 @@ def get_config() -> ml_collections.ConfigDict:
     config.seed = 0
     config.wandb_config = get_wandb_configs()
     config.dataset_config = get_dataset_configs()
+    config.aug_config = get_augmentation_configs()
     config.model_config = get_model_configs()
     config.callback_config = get_callback_configs()
     config.train_config = get_train_configs()
